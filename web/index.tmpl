@@ -14,7 +14,7 @@
 
   <title>Gazua</title>
   <style>
-    .btn-login {
+    .float-right {
       float: right;
     }
   </style>
@@ -22,9 +22,17 @@
 
 <body>
   <div class="container" style="padding-top: 1rem; padding-bottom: 1rem;">
-    <button type="button" class="btn btn-primary btn-sm btn-login"><i class="fab fa-google"></i></button>
+    <div class="continaer float-right">
+      {{if not .}}
+      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/auth/login/google'"><i
+          class="fab fa-google"></i></button>
+      {{else}}
+      {{.Name}}
+      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/logout'"><i
+          class="fas fa-sign-out-alt"></i></button>
+      {{end}}
+    </div>
     <h3>가즈아-</h3>
-
   </div>
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
