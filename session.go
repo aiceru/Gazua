@@ -38,6 +38,10 @@ func setCurrentUser(r *http.Request, u *User) {
 	s.Set(currentUserKey, data)
 }
 
+func deleteCurrentUser(r *http.Request) {
+	sessions.GetSession(r).Delete(currentUserKey)
+}
+
 func sessionHandler(ignore ...string) negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		for _, s := range ignore {
@@ -46,6 +50,15 @@ func sessionHandler(ignore ...string) negroni.HandlerFunc {
 				return
 			}
 		}
+
+		u := getCurrentUser(r)
+		if u != nil && u.Valid() {
+			setCurrentUser(r, u)
+			next(w, r)
+			return
+		}
+
+		deleteCurrentUser(r)
 		next(w, r)
 		return
 	}

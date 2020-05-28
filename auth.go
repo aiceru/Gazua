@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -30,17 +31,13 @@ func randToken() string {
 
 func loginByGoogle(w http.ResponseWriter, r *http.Request) {
 	session := sessions.GetSession(r)
-	session.Options(sessions.Options{
-		Path:   "/auth",
-		MaxAge: 300,
-	})
 
 	oAuthConf = &oauth2.Config{
 		ClientID:     "470304159105-fdeiv96gdmca1i0j1c96gi5jm280nvla.apps.googleusercontent.com",
 		ClientSecret: "qFKwFlGkoNMsM6GfXsLGC_e-",
 		RedirectURL:  callbackURL,
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{scopeProfile},
+		Scopes:       []string{scopeProfile, scopeEmail},
 	}
 
 	state := randToken()
@@ -78,7 +75,24 @@ func authByGoogle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Println(string(userInfo))
+
+	var googleUser GoogleUser
+	json.Unmarshal(userInfo, &googleUser)
+
+	/*
+		TODO:
+		Transform googleUser to User struct
+		Search User from user-db
+		if not exists,
+			create User in user-db
+		Save User to current session
+	*/
+
+	var user User
+	user.Import(googleUser)
+
+	setCurrentUser(r, &user)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // tok, err := conf.Exchange(oauth2.NoContext, "authorization-code")

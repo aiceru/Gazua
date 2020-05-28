@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 
 	sessions "github.com/goincremental/negroni-sessions"
@@ -15,7 +16,9 @@ var store sessions.Store
 
 func init() {
 	// Create new renderer
-	renderer = render.New()
+	renderer = render.New(render.Options{
+		Directory: "web",
+	})
 }
 
 const (
@@ -25,8 +28,9 @@ const (
 
 func main() {
 	router := httprouter.New()
-	router.ServeFiles("/www/*filepath", http.Dir("www"))
+	router.GET("/", renderMainView)
 	router.GET("/auth/:action/:provider", loginHandler)
+	router.GET("/logout", logoutHandler)
 
 	n := negroni.Classic()
 
@@ -36,6 +40,19 @@ func main() {
 
 	n.UseHandler(router)
 	n.Run(":9000")
+}
+
+func renderMainView(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	session := sessions.GetSession(r)
+	var u User
+	if session.Get(currentUserKey) != nil {
+		// render User info
+		data := session.Get(currentUserKey).([]byte)
+		json.Unmarshal(data, &u)
+		renderer.HTML(w, http.StatusOK, "index", u)
+	} else {
+		renderer.HTML(w, http.StatusOK, "index", nil)
+	}
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -64,4 +81,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	default:
 		http.Error(w, "Auth action '"+action+"' is not supported.", http.StatusNotFound)
 	}
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sessions.GetSession(r).Delete(currentUserKey)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
