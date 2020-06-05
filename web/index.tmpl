@@ -37,19 +37,57 @@
   <div class="container" style="padding-top: 1rem; padding-bottom: 1rem;">
     {{if not .}}
     <div class="float-right">
-      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/auth/login/google'"><i
-          class="fab fa-google"></i></button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/auth/login/google'">
+        <i class="fab fa-google"></i>
+      </button>
     </div>
     {{else}}
     <div class="float-right" style="margin-left: 1rem;">
-      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/logout'"><i
-          class="fas fa-sign-out-alt"></i></button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/logout'">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
     <div class="rbox float-right">
       <img class="profile" src="{{.AvatarURL}}">
     </div>
     {{end}}
     <h3>가즈아-</h3>
+  </div>
+
+  <div class="container" style="padding-top: 1rem;">
+    <table class="table table-striped" style="width: 100%">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">종목</th>
+          <th scope="col">현재가</th>
+          <th scope="col">보유량</th>
+          <th scope="col">쓴돈</th>
+          <th scope="col">남은돈</th>
+          <th scope="col">얼마 벌었나</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>종목1<br>코드1</td>
+          <td>11,111</td>
+          <td>22</td>
+          <td>33,333</td>
+          <td>44,444</td>
+          <td>55,555<br>66.55%</td>
+        </tr>
+        <tr class="table-info">
+          <td colspan="3">합계</td>
+          <td>11,111</td>
+          <td>22,222</td>
+          <td>33,333</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="container" style="text-align: right; padding-bottom: 1rem;">
+    <button type="button" class="btn btn-primary btn-sm" onclick="location.href=''">
+      <i class="fas fa-pen-square"></i>
+    </button>
   </div>
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
