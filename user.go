@@ -11,7 +11,7 @@ type User struct {
 	Name      string           `json:"name" bson:"name,omitempty"`
 	Email     string           `json:"email" bson:"email,omitempty"`
 	AvatarURL string           `json:"avatar_url" bson:"avatar_url,omitempty"`
-	Stocks    map[string]Stock `json:"stocks" bson:"stocks,omitempty"`
+	Stocks    map[string]Stock `json:"-" bson:"stocks,omitempty"`
 	Expires   time.Time        `json:"expires" bson:"-"`
 }
 
