@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 
 	sessions "github.com/goincremental/negroni-sessions"
 	"github.com/goincremental/negroni-sessions/cookiestore"
@@ -13,12 +15,22 @@ import (
 
 var renderer *render.Render
 var store sessions.Store
+var userdb Dao
 
 func init() {
 	// Create new renderer
 	renderer = render.New(render.Options{
 		Directory: "web",
 	})
+	userdb = &UserDao{
+		URL: "mongodb+srv://" + os.Getenv("ATLAS_USER") + ":" +
+			os.Getenv("ATLAS_PASS") + "@" + os.Getenv("ATLAS_URI"),
+		DBName:         databaseName,
+		CollectionName: collectionName,
+	}
+	if err := userdb.Connect(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 const (
