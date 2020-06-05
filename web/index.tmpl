@@ -35,7 +35,7 @@
 
 <body>
   <div class="container" style="padding-top: 1rem; padding-bottom: 1rem;">
-    {{if not .}}
+    {{if not .user}}
     <div class="float-right">
       <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/auth/login/google'">
         <i class="fab fa-google"></i>
@@ -48,14 +48,15 @@
       </button>
     </div>
     <div class="rbox float-right">
-      <img class="profile" src="{{.AvatarURL}}">
+      <img class="profile" src="{{.user.AvatarURL}}">
     </div>
     {{end}}
     <h3>가즈아-</h3>
   </div>
 
+  {{if .user}}
   <div class="container" style="padding-top: 1rem;">
-    <table class="table table-striped" style="width: 100%">
+    <table class="table table-striped" style="text-align: center; width: 100%">
       <thead class="thead-light">
         <tr>
           <th scope="col">종목</th>
@@ -67,19 +68,21 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>종목1<br>코드1</td>
-          <td>11,111</td>
-          <td>22</td>
-          <td>33,333</td>
-          <td>44,444</td>
-          <td>55,555<br>66.55%</td>
-        </tr>
+        {{range $key, $value := .stockMap}}
+          <tr>
+            <td>{{$value.Name}}<br>{{$key}}</td>
+            <td>{{$value.CurrentPrice}}</td>
+            <td>{{$value.Holdings}}</td>
+            <td>{{$value.Spent}}</td>
+            <td>{{$value.Remain}}</td>
+            <td>{{$value.Income}}<br>{{printf "%.2f" $value.Yield}}</td>
+          </tr>
+        {{end}}
         <tr class="table-info">
           <td colspan="3">합계</td>
-          <td>11,111</td>
-          <td>22,222</td>
-          <td>33,333</td>
+          <td>{{.sum.Spent}}</td>
+          <td>{{.sum.Remain}}</td>
+          <td>{{.sum.Income}}<br>{{printf "%.2f" .sum.Yield}}</td>
         </tr>
       </tbody>
     </table>
@@ -89,6 +92,11 @@
       <i class="fas fa-pen-square"></i>
     </button>
   </div>
+  {{else}}
+  <div class="container" style="text-align: center; padding-top: 1rem;">
+    Please login
+  </div>
+  {{end}}
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
