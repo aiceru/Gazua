@@ -73,6 +73,7 @@ func renderMainView(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 		for code, stock := range user.Stocks {
 			income := stock.CalculateIncome(code)
 			sum.Spent += income.Spent
+			sum.Earned += income.Earned
 			sum.Remain += income.Remain
 			sum.Income += income.Income
 			stockMap[code] = income

@@ -61,26 +61,27 @@
         <tr>
           <th scope="col">종목</th>
           <th scope="col">현재가</th>
-          <th scope="col">보유량</th>
-          <th scope="col">쓴돈</th>
-          <th scope="col">남은돈</th>
+          <th scope="col">사는데 쓴돈</th>
+          <th scope="col">팔아서 번돈</th>
+          <th scope="col">보유량<br>보유주식 가치</th>
           <th scope="col">얼마 벌었나</th>
         </tr>
       </thead>
       <tbody>
         {{range $key, $value := .stockMap}}
-          <tr>
+          <tr style="vertical-align: middle;">
             <td>{{$value.Name}}<br>{{$key}}</td>
             <td>{{$value.CurrentPrice}}</td>
-            <td>{{$value.Holdings}}</td>
             <td>{{$value.Spent}}</td>
-            <td>{{$value.Remain}}</td>
+            <td>{{$value.Earned}}</td>
+            <td>{{$value.Holdings}}<br>{{$value.Remain}}</td>
             <td>{{$value.Income}}<br>{{printf "%.2f" $value.Yield}}</td>
           </tr>
         {{end}}
         <tr class="table-info">
-          <td colspan="3">합계</td>
+          <td colspan="2">합계</td>
           <td>{{.sum.Spent}}</td>
+          <td>{{.sum.Earned}}</td>
           <td>{{.sum.Remain}}</td>
           <td>{{.sum.Income}}<br>{{printf "%.2f" .sum.Yield}}</td>
         </tr>
