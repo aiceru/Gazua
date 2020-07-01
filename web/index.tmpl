@@ -30,10 +30,39 @@
       height: 100%;
       object-fit: cover;
     }
+
+    .table > tbody > tr > td {
+      vertical-align: middle;
+    }
+    .table > thead > tr > th {
+      vertical-align: middle;
+    }
   </style>
-</head>
+  </head>
 
 <body>
+  <!-- popup layer : buy or sell stocks -->
+  <script type="text/javascript">
+    function ViewEdit() {
+      document.getElementById("EditLayer").style.display = 'inline'
+    }
+    function CloseEdit() {
+      document.getElementById("EditLayer").style.display = 'none'
+    }
+  </script>
+
+  <div id="EditLayer" style="position:absolute; z-index:999; display:none; width:100%; height:100%;
+  background: none rgba(0, 0, 0, 0.6);
+  filter: progid:DXImageTransform.Microsoft.Gradient(startColorstr='#80000000', endColorstr='#80000000');"
+  align='center'>
+    <table valign="middle" height=100%><tr><td>
+    <input type='text'><input type='submit'><br>
+    ...
+    <br><br>
+    <font size='3' color='white' onclick='CloseEdit()'>Close</font>
+    </td></tr></table>
+  </div>
+
   <div class="container" style="padding-top: 1rem; padding-bottom: 1rem;">
     {{if not .user}}
     <div class="float-right">
@@ -69,7 +98,7 @@
       </thead>
       <tbody>
         {{range $key, $value := .stockMap}}
-          <tr style="vertical-align: middle;">
+          <tr><!-- style="vertical-align: middle;"> -->
             <td>{{$value.Name}}<br>{{$key}}</td>
             <td>{{$value.CurrentPrice}}</td>
             <td>{{$value.Spent}}</td>
@@ -89,7 +118,7 @@
     </table>
   </div>
   <div class="container" style="text-align: right; padding-bottom: 1rem;">
-    <button type="button" class="btn btn-primary btn-sm" onclick="location.href=''">
+    <button type="button" class="btn btn-primary btn-sm" onclick="location.href='javascript:ViewEdit();'">
       <i class="fas fa-pen-square"></i>
     </button>
   </div>

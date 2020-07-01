@@ -1,5 +1,15 @@
 package main
 
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"golang.org/x/net/html"
+)
+
 // Stock represents stock information
 // Stock code (KRX XXXXXX) would be key of the stocks map
 type Stock struct {
@@ -51,4 +61,30 @@ func (s Stock) CalculateIncome(code string) *StockStatus {
 // getCurrentPrice dummy func
 func getCurrentPrice(code string) int {
 	return 15000
+}
+
+func updateStockCode(name string) string {
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get("https://www.google.com/search?q=" + name + "+KRX")
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	code := ""
+	z := html.NewTokenizer(resp.Body)
+	for tt := z.Next(); tt != html.ErrorToken; tt = z.Next() {
+		switch tt {
+		case html.ErrorToken:
+			break
+		case html.TextToken:
+			textToken := string(z.Text())
+			if strings.HasSuffix(textToken, "TradingView") {
+				fmt.Println(textToken)
+				code = strings.TrimLeft(textToken, name + " KRX ")
+				code = strings.TrimRight(code, " - TradingView")
+				break
+			}
+		}
+	}
+	return code
 }
