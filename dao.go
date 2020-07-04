@@ -12,28 +12,24 @@ import (
 )
 
 const (
-	databaseName   = "mbws-db"
-	collectionName = "users"
+	databaseName = "mbws-db"
+	userCollName = "users"
 )
 
-// Dao provides access to database
-type Dao interface {
+// UserDao provides access to user database
+type UserDao interface {
 	Connect() error
-	Insert(interface{}) error
+	InsertUser(*User) error
 	FindUser(string) (*User, error)
-	Find(bson.M) (interface{}, error)
 	UpdateUser(*User, ...string) error
 	UpdateUserStock(*User) error
-	Update(bson.M, bson.D, ...*options.UpdateOptions) (interface{}, error)
-	Delete(bson.M)
 }
 
-// UserDao is a Dao for user db
-type UserDao struct {
-	URL            string
-	DBName         string
-	CollectionName string
-	Client         *mongo.Client
+// MongoDao is a Dao for user db
+type MongoDao struct {
+	URL    string
+	DBName string
+	Client *mongo.Client
 }
 
 func checkConnect(c *mongo.Client) error {
@@ -43,7 +39,16 @@ func checkConnect(c *mongo.Client) error {
 	return nil
 }
 
-func getUserCollection(
+// Connect to database
+func (md *MongoDao) Connect() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(md.URL))
+	md.Client = client
+	return err
+}
+
+func getCollection(
 	c *mongo.Client, dbname, colname string) (
 	*mongo.Collection, error) {
 	if err := checkConnect(c); err != nil {
@@ -52,18 +57,9 @@ func getUserCollection(
 	return c.Database(dbname).Collection(colname), nil
 }
 
-// Connect to database
-func (ud *UserDao) Connect() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(ud.URL))
-	ud.Client = client
-	return err
-}
-
-// Insert a user
-func (ud *UserDao) Insert(u interface{}) error {
-	collection, err := getUserCollection(ud.Client, ud.DBName, ud.CollectionName)
+// InsertUser inserts a user
+func (md *MongoDao) InsertUser(u *User) error {
+	collection, err := getCollection(md.Client, md.DBName, userCollName)
 	if err != nil {
 		return err
 	}
@@ -78,9 +74,9 @@ func (ud *UserDao) Insert(u interface{}) error {
 }
 
 // FindUser finds a user from db by email
-func (ud *UserDao) FindUser(email string) (*User, error) {
+func (md *MongoDao) FindUser(email string) (*User, error) {
 	filter := bson.M{"email": email}
-	user, err := ud.Find(filter)
+	user, err := md.Find(filter, userCollName)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +84,8 @@ func (ud *UserDao) FindUser(email string) (*User, error) {
 }
 
 // Find document from collection
-func (ud *UserDao) Find(filter bson.M) (interface{}, error) {
-	collection, err := getUserCollection(ud.Client, ud.DBName, ud.CollectionName)
+func (md *MongoDao) Find(filter bson.M, collname string) (interface{}, error) {
+	collection, err := getCollection(md.Client, md.DBName, collname)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +102,7 @@ func (ud *UserDao) Find(filter bson.M) (interface{}, error) {
 }
 
 // UpdateUser updates user info
-func (ud *UserDao) UpdateUser(u *User, updateKeys ...string) error {
+func (md *MongoDao) UpdateUser(u *User, updateKeys ...string) error {
 	filter := bson.M{"email": u.Email}
 
 	data := bson.D{}
@@ -123,7 +119,7 @@ func (ud *UserDao) UpdateUser(u *User, updateKeys ...string) error {
 
 	if len(data) > 0 {
 		update := bson.D{{Key: "$set", Value: data}}
-		_, err := ud.Update(filter, update)
+		_, err := md.Update(filter, update, userCollName)
 		return err
 	}
 
@@ -131,7 +127,7 @@ func (ud *UserDao) UpdateUser(u *User, updateKeys ...string) error {
 }
 
 // UpdateUserStock add user's new stock info
-func (ud *UserDao) UpdateUserStock(u *User) error {
+func (md *MongoDao) UpdateUserStock(u *User) error {
 	filter := bson.M{
 		"email": u.Email,
 	}
@@ -139,14 +135,14 @@ func (ud *UserDao) UpdateUserStock(u *User) error {
 	update := bson.D{{Key: "$set", Value: bson.M{
 		"stocks": u.Stocks}}}
 
-	_, err := ud.Update(filter, update)
+	_, err := md.Update(filter, update, userCollName)
 	return err
 }
 
 // Update document from collection of db
-func (ud *UserDao) Update(filter bson.M, update bson.D,
+func (md *MongoDao) Update(filter bson.M, update bson.D, collname string,
 	opts ...*options.UpdateOptions) (interface{}, error) {
-	collection, err := getUserCollection(ud.Client, ud.DBName, ud.CollectionName)
+	collection, err := getCollection(md.Client, md.DBName, collname)
 	if err != nil {
 		return nil, err
 	}
@@ -155,9 +151,4 @@ func (ud *UserDao) Update(filter bson.M, update bson.D,
 	defer cancel()
 
 	return collection.UpdateOne(ctx, filter, update, opts...)
-}
-
-// Delete document from collection of db
-func (ud *UserDao) Delete(filter bson.M) {
-
 }

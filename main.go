@@ -15,18 +15,17 @@ import (
 
 var renderer *render.Render
 var store sessions.Store
-var userdb Dao
+var userdb UserDao
 
 func init() {
 	// Create new renderer
 	renderer = render.New(render.Options{
 		Directory: "web",
 	})
-	userdb = &UserDao{
+	userdb = &MongoDao{
 		URL: "mongodb+srv://" + os.Getenv("ATLAS_USER") + ":" +
 			os.Getenv("ATLAS_PASS") + "@" + os.Getenv("ATLAS_URI"),
 		DBName:         databaseName,
-		CollectionName: collectionName,
 	}
 	if err := userdb.Connect(); err != nil {
 		log.Fatal(err)

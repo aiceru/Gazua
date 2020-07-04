@@ -96,7 +96,7 @@ func authByGoogle(w http.ResponseWriter, r *http.Request) {
 		found.UpdateWithDB(user)
 		setCurrentUser(r, found)
 	} else {
-		if err := userdb.Insert(user); err != nil {
+		if err := userdb.InsertUser(user); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

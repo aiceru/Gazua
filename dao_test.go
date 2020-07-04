@@ -5,16 +5,15 @@ import (
 	"testing"
 )
 
-var ud *UserDao
+var ud *MongoDao
 
 func TestMain(m *testing.M) {
-	ud = &UserDao{
+	ud = &MongoDao{
 		URL: "mongodb+srv://" +
 			os.Getenv("ATLAS_USER") + ":" +
 			os.Getenv("ATLAS_PASS") + "@" +
 			os.Getenv("ATLAS_URI"),
 		DBName:         databaseName,
-		CollectionName: collectionName,
 		Client:         nil,
 	}
 	ud.Connect()
@@ -23,11 +22,11 @@ func TestMain(m *testing.M) {
 
 func TestUserDao_Insert(t *testing.T) {
 	type args struct {
-		u interface{}
+		u *User
 	}
 	tests := []struct {
 		name    string
-		ud      *UserDao
+		ud      *MongoDao
 		args    args
 		wantErr bool
 	}{
@@ -36,7 +35,7 @@ func TestUserDao_Insert(t *testing.T) {
 			name: "Insert test",
 			ud:   ud,
 			args: args{
-				User{
+				&User{
 					Name:      "test name",
 					Email:     "test email",
 					AvatarURL: "test url",
@@ -63,7 +62,7 @@ func TestUserDao_Insert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.ud.Insert(tt.args.u); (err != nil) != tt.wantErr {
+			if err := tt.ud.InsertUser(tt.args.u); (err != nil) != tt.wantErr {
 				t.Errorf("UserDao.Insert() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -76,7 +75,7 @@ func TestUserDao_UpdateUserStock(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		ud      *UserDao
+		ud      *MongoDao
 		args    args
 		wantErr bool
 	}{
