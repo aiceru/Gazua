@@ -1,0 +1,45 @@
+{{define "editModal"}}
+<ul class="nav nav-tabs nav-fill" id="transacTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="buyTab" data-toggle="tab" href="#buy" role="tab" aria-controls="buy"
+            aria-selected="true">더 사자!!</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" id="sellTab" data-toggle="tab" href="#sell" role="tab" aria-controls="sell"
+            aria-selected="false">손절ㅠㅠ</a>
+    </li>
+</ul>
+<div class="tab-content" style="margin-top: 1rem;">
+    <div class="tab-pane active" id="buy" role="tabpanel" aria-labelledby="buyTab">
+        <form>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="code" placeholder="뭐 샀니" aria-label="code"
+                    aria-describedby="searchButton">
+                <div class="input-group-append">
+                    <button class="btn btn-primary btn-sm" type="button" id="searchButton">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <input type="text" class="form-control" id="quantity" placeholder="몇주 샀니">
+                <input type="text" class="form-control" id="price" placeholder="한 주에 얼마니">
+            </div>
+        </form>
+    </div>
+    <div class="tab-pane" id="sell" role="tabpanel" aria-labelledby="sellTab">
+        <form>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="scode" placeholder="뭐 팔았니">
+                <input type="text" class="form-control" id="squantity" placeholder="몇주 팔았니">
+                <input type="text" class="form-control" id="sprice" placeholder="한 주에 얼마니">
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#searchButton').click(function(){
+        $.getJSON("/stocks/code", { name: "카카오" }, function(data){
+            alert(data)
+        })
+    })
+</script>
+{{end}}

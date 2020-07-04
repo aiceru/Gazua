@@ -11,6 +11,9 @@
     integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
   <!-- Font-awesome ICONs -->
   <script src="https://kit.fontawesome.com/376c0c6e0b.js" crossorigin="anonymous"></script>
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+    crossorigin="anonymous"></script>
 
   <title>Gazua</title>
   <style>
@@ -41,26 +44,24 @@
   </head>
 
 <body>
-  <!-- popup layer : buy or sell stocks -->
-  <script type="text/javascript">
-    function ViewEdit() {
-      document.getElementById("EditLayer").style.display = 'inline'
-    }
-    function CloseEdit() {
-      document.getElementById("EditLayer").style.display = 'none'
-    }
-  </script>
-
-  <div id="EditLayer" style="position:absolute; z-index:999; display:none; width:100%; height:100%;
-  background: none rgba(0, 0, 0, 0.6);
-  filter: progid:DXImageTransform.Microsoft.Gradient(startColorstr='#80000000', endColorstr='#80000000');"
-  align='center'>
-    <table valign="middle" height=100%><tr><td>
-    <input type='text'><input type='submit'><br>
-    ...
-    <br><br>
-    <font size='3' color='white' onclick='CloseEdit()'>Close</font>
-    </td></tr></table>
+  <div class="modal fade" id="editModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">사던가 팔던가</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {{template "editModal"}}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">취소ㅠㅠ</button>
+          <button type="button" class="btn btn-primary">가즈아~!!</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="container" style="padding-top: 1rem; padding-bottom: 1rem;">
@@ -118,7 +119,7 @@
     </table>
   </div>
   <div class="container" style="text-align: right; padding-bottom: 1rem;">
-    <button type="button" class="btn btn-primary btn-sm" onclick="location.href='javascript:ViewEdit();'">
+    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editModal">
       <i class="fas fa-pen-square"></i>
     </button>
   </div>
@@ -129,9 +130,6 @@
   {{end}}
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-    crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
     crossorigin="anonymous"></script>
