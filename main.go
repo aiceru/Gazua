@@ -56,12 +56,35 @@ func main() {
 
 func renderMainView(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	session := sessions.GetSession(r)
-	var u User
+	var sessionUser User
 	if session.Get(currentUserKey) != nil {
 		// render User info
 		data := session.Get(currentUserKey).([]byte)
-		json.Unmarshal(data, &u)
-		renderer.HTML(w, http.StatusOK, "index", u)
+		json.Unmarshal(data, &sessionUser)
+		user, err := userdb.FindUser(sessionUser.Email)
+		if err != nil {
+			log.Println(err)
+			renderer.HTML(w, http.StatusOK, "index", sessionUser)
+			return
+		}
+
+		stockMap := make(StockStatusMap, 0)
+		sum := StockStatus{}
+		for code, stock := range user.Stocks {
+			income := stock.CalculateIncome(code)
+			sum.Spent += income.Spent
+			sum.Earned += income.Earned
+			sum.Remain += income.Remain
+			sum.Income += income.Income
+			stockMap[code] = income
+		}
+		sum.Yield = float32((sum.Income)) / float32(sum.Spent) * 100
+
+		renderer.HTML(w, http.StatusOK, "index", map[string]interface{}{
+			"user":     user,
+			"stockMap": stockMap,
+			"sum":      sum,
+		})
 	} else {
 		renderer.HTML(w, http.StatusOK, "index", nil)
 	}

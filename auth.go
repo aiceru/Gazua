@@ -88,20 +88,20 @@ func authByGoogle(w http.ResponseWriter, r *http.Request) {
 		Save User to current session
 	*/
 
-	var found *User
 	user := new(User)
-
 	user.Import(googleUser)
-	if found, err = userdb.FindUser(user.Email); err == nil {
+
+	if found, err := userdb.FindUser(user.Email); err == nil {
 		// Compare and update user
 		found.UpdateWithDB(user)
+		setCurrentUser(r, found)
 	} else {
 		if err := userdb.Insert(user); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		setCurrentUser(r, user)
 	}
 
-	setCurrentUser(r, found)
 	http.Redirect(w, r, "/", http.StatusFound)
 }

@@ -11,6 +11,9 @@
     integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
   <!-- Font-awesome ICONs -->
   <script src="https://kit.fontawesome.com/376c0c6e0b.js" crossorigin="anonymous"></script>
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+    crossorigin="anonymous"></script>
 
   <title>Gazua</title>
   <style>
@@ -30,32 +33,103 @@
       height: 100%;
       object-fit: cover;
     }
+
+    .table > tbody > tr > td {
+      vertical-align: middle;
+    }
+    .table > thead > tr > th {
+      vertical-align: middle;
+    }
   </style>
-</head>
+  </head>
 
 <body>
+  <div class="modal fade" id="editModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">사던가 팔던가</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {{template "editModal"}}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">취소ㅠㅠ</button>
+          <button type="button" class="btn btn-primary">가즈아~!!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="container" style="padding-top: 1rem; padding-bottom: 1rem;">
-    {{if not .}}
+    {{if not .user}}
     <div class="float-right">
-      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/auth/login/google'"><i
-          class="fab fa-google"></i></button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/auth/login/google'">
+        <i class="fab fa-google"></i>
+      </button>
     </div>
     {{else}}
     <div class="float-right" style="margin-left: 1rem;">
-      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/logout'"><i
-          class="fas fa-sign-out-alt"></i></button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/logout'">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
     <div class="rbox float-right">
-      <img class="profile" src="{{.AvatarURL}}">
+      <img class="profile" src="{{.user.AvatarURL}}">
     </div>
     {{end}}
     <h3>가즈아-</h3>
   </div>
+
+  {{if .user}}
+  <div class="container" style="padding-top: 1rem;">
+    <table class="table table-striped" style="text-align: center; width: 100%">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">종목</th>
+          <th scope="col">현재가</th>
+          <th scope="col">사는데 쓴돈</th>
+          <th scope="col">팔아서 번돈</th>
+          <th scope="col">보유량<br>보유주식 가치</th>
+          <th scope="col">얼마 벌었나</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range $key, $value := .stockMap}}
+          <tr><!-- style="vertical-align: middle;"> -->
+            <td>{{$value.Name}}<br>{{$key}}</td>
+            <td>{{$value.CurrentPrice}}</td>
+            <td>{{$value.Spent}}</td>
+            <td>{{$value.Earned}}</td>
+            <td>{{$value.Holdings}}<br>{{$value.Remain}}</td>
+            <td>{{$value.Income}}<br>{{printf "%.2f" $value.Yield}}</td>
+          </tr>
+        {{end}}
+        <tr class="table-info">
+          <td colspan="2">합계</td>
+          <td>{{.sum.Spent}}</td>
+          <td>{{.sum.Earned}}</td>
+          <td>{{.sum.Remain}}</td>
+          <td>{{.sum.Income}}<br>{{printf "%.2f" .sum.Yield}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="container" style="text-align: right; padding-bottom: 1rem;">
+    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editModal">
+      <i class="fas fa-pen-square"></i>
+    </button>
+  </div>
+  {{else}}
+  <div class="container" style="text-align: center; padding-top: 1rem;">
+    Please login
+  </div>
+  {{end}}
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-    crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
     crossorigin="anonymous"></script>
