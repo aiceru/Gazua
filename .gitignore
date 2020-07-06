@@ -94,3 +94,6 @@ $RECYCLE.BIN/
 # Google drive sync
 *.drivedownload
 *.driveupload
+
+# Go test Files
+*_test.go
