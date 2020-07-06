@@ -16,7 +16,6 @@ import (
 var renderer *render.Render
 var store sessions.Store
 var userdb UserDao
-var corpdb CorpDao
 
 func init() {
 	// Create new renderer
@@ -32,13 +31,25 @@ func init() {
 		log.Fatal(err)
 	}
 	userdb = mdao
-	corpdb = mdao
+
+	updateCorpList()
+	go dailyUpdateCorps()
+
+	loadCorpMap()
 }
 
 const (
 	sessionKey    = "MBWSserver-session-key"
 	sessionSecret = "MBWSserver-session-secret"
 )
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
 
 func main() {
 	router := httprouter.New()

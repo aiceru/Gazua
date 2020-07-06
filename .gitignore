@@ -97,3 +97,6 @@ $RECYCLE.BIN/
 
 # Go test Files
 *_test.go
+
+# Corp List JSON file
+corpList.json
