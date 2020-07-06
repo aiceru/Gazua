@@ -37,6 +37,21 @@ const (
 
 var corpMap map[string]*Corp
 
+func dailyUpdateCorps() {
+	cron, err := newDailyCron(8, 0, 0, "Asia/Seoul")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for {
+		<-cron.t.C
+		log.Println(time.Now(), "- cron tick")
+		updateCorpList()
+		loadCorpMap()
+	}
+}
+
 func transformToEucKr(b []byte) string {
 	var bufs bytes.Buffer
 	wr := transform.NewWriter(&bufs, korean.EUCKR.NewDecoder())

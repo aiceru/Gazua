@@ -33,6 +33,7 @@ func init() {
 	userdb = mdao
 
 	updateCorpList()
+	go dailyUpdateCorps()
 
 	loadCorpMap()
 }
