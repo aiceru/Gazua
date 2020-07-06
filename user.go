@@ -33,15 +33,15 @@ func (u *User) Import(g GoogleUser) {
 }
 
 // UpdateWithDB updates user info, Email is key identifier so that does not change
-func (u *User) UpdateWithDB(old *User) {
+func (u *User) UpdateWithDB(newUser *User) {
 	keys := make([]string, 0)
 
-	if u.Name != old.Name {
-		u.Name = old.Name
+	if u.Name != newUser.Name {
+		u.Name = newUser.Name
 		keys = append(keys, "name")
 	}
-	if u.AvatarURL != old.AvatarURL {
-		u.AvatarURL = old.AvatarURL
+	if u.AvatarURL != newUser.AvatarURL {
+		u.AvatarURL = newUser.AvatarURL
 		keys = append(keys, "avatar_url")
 	}
 
