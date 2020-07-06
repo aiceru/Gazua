@@ -14,6 +14,7 @@ import (
 const (
 	databaseName = "mbws-db"
 	userCollName = "users"
+	corpCollName = "corps"
 )
 
 // UserDao provides access to user database
@@ -23,6 +24,14 @@ type UserDao interface {
 	FindUser(string) (*User, error)
 	UpdateUser(*User, ...string) error
 	UpdateUserStock(*User) error
+}
+
+// CorpDao provides access to corp database
+type CorpDao interface {
+	Connect() error
+	InsertCorp(*Corp) error
+	FindCorp(string) (*Corp, error)
+	ReplaceCorp(*Corp) error
 }
 
 // MongoDao is a Dao for user db
@@ -41,11 +50,14 @@ func checkConnect(c *mongo.Client) error {
 
 // Connect to database
 func (md *MongoDao) Connect() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(md.URL))
-	md.Client = client
-	return err
+	if checkConnect(md.Client) != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		client, err := mongo.Connect(ctx, options.Client().ApplyURI(md.URL))
+		md.Client = client
+		return err
+	}
+	return nil
 }
 
 func getCollection(
@@ -59,7 +71,17 @@ func getCollection(
 
 // InsertUser inserts a user
 func (md *MongoDao) InsertUser(u *User) error {
-	collection, err := getCollection(md.Client, md.DBName, userCollName)
+	return md.Insert(userCollName, u)
+}
+
+// InsertCorp inserts a corp
+func (md *MongoDao) InsertCorp(c *Corp) error {
+	return md.Insert(corpCollName, c)
+}
+
+// Insert insert document to mongodb
+func (md *MongoDao) Insert(colname string, d interface{}) error {
+	collection, err := getCollection(md.Client, md.DBName, colname)
 	if err != nil {
 		return err
 	}
@@ -67,7 +89,7 @@ func (md *MongoDao) InsertUser(u *User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := collection.InsertOne(ctx, u)
+	res, err := collection.InsertOne(ctx, d)
 	id := res.InsertedID
 	log.Println(id)
 	return err
@@ -76,15 +98,27 @@ func (md *MongoDao) InsertUser(u *User) error {
 // FindUser finds a user from db by email
 func (md *MongoDao) FindUser(email string) (*User, error) {
 	filter := bson.M{"email": email}
-	user, err := md.Find(filter, userCollName)
-	if err != nil {
-		return nil, err
+	user := new(User)
+	f, err := md.Find(filter, userCollName)
+	if err == nil {
+		f.Decode(user)
 	}
-	return user.(*User), err
+	return user, err
+}
+
+// FindCorp finds a corp from db by name
+func (md *MongoDao) FindCorp(name string) (*Corp, error) {
+	filter := bson.M{"name": name}
+	corp := new(Corp)
+	f, err := md.Find(filter, corpCollName)
+	if err == nil {
+		f.Decode(corp)
+	}
+	return corp, err
 }
 
 // Find document from collection
-func (md *MongoDao) Find(filter bson.M, collname string) (interface{}, error) {
+func (md *MongoDao) Find(filter bson.M, collname string) (*mongo.SingleResult, error) {
 	collection, err := getCollection(md.Client, md.DBName, collname)
 	if err != nil {
 		return nil, err
@@ -93,12 +127,7 @@ func (md *MongoDao) Find(filter bson.M, collname string) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var user User
-	if err := collection.FindOne(ctx, filter).Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return collection.FindOne(ctx, filter), nil
 }
 
 // UpdateUser updates user info
@@ -141,7 +170,7 @@ func (md *MongoDao) UpdateUserStock(u *User) error {
 
 // Update document from collection of db
 func (md *MongoDao) Update(filter bson.M, update bson.D, collname string,
-	opts ...*options.UpdateOptions) (interface{}, error) {
+	opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
 	collection, err := getCollection(md.Client, md.DBName, collname)
 	if err != nil {
 		return nil, err
@@ -151,4 +180,30 @@ func (md *MongoDao) Update(filter bson.M, update bson.D, collname string,
 	defer cancel()
 
 	return collection.UpdateOne(ctx, filter, update, opts...)
+}
+
+// ReplaceCorp replaces corp with corp name + refresh TTL
+func (md *MongoDao) ReplaceCorp(c *Corp) error {
+	filter := bson.M{
+		"name": c.Name,
+	}
+
+	opt := options.Replace().SetUpsert(true)
+
+	_, err := md.ReplaceOne(filter, c, corpCollName, opt)
+	return err
+}
+
+// ReplaceOne replaces one document from collection of db
+func (md *MongoDao) ReplaceOne(filter bson.M, replace interface{}, collname string,
+	opts ...*options.ReplaceOptions) (*mongo.UpdateResult, error) {
+	collection, err := getCollection(md.Client, md.DBName, collname)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return collection.ReplaceOne(ctx, filter, replace, opts...)
 }
