@@ -26,14 +26,6 @@ type UserDao interface {
 	UpdateUserStock(*User) error
 }
 
-// CorpDao provides access to corp database
-type CorpDao interface {
-	Connect() error
-	InsertCorp(*Corp) error
-	FindCorp(string) (*Corp, error)
-	ReplaceCorp(*Corp) error
-}
-
 // MongoDao is a Dao for user db
 type MongoDao struct {
 	URL    string
@@ -74,11 +66,6 @@ func (md *MongoDao) InsertUser(u *User) error {
 	return md.Insert(userCollName, u)
 }
 
-// InsertCorp inserts a corp
-func (md *MongoDao) InsertCorp(c *Corp) error {
-	return md.Insert(corpCollName, c)
-}
-
 // Insert insert document to mongodb
 func (md *MongoDao) Insert(colname string, d interface{}) error {
 	collection, err := getCollection(md.Client, md.DBName, colname)
@@ -104,17 +91,6 @@ func (md *MongoDao) FindUser(email string) (*User, error) {
 		f.Decode(user)
 	}
 	return user, err
-}
-
-// FindCorp finds a corp from db by name
-func (md *MongoDao) FindCorp(name string) (*Corp, error) {
-	filter := bson.M{"name": name}
-	corp := new(Corp)
-	f, err := md.Find(filter, corpCollName)
-	if err == nil {
-		f.Decode(corp)
-	}
-	return corp, err
 }
 
 // Find document from collection
@@ -180,18 +156,6 @@ func (md *MongoDao) Update(filter bson.M, update bson.D, collname string,
 	defer cancel()
 
 	return collection.UpdateOne(ctx, filter, update, opts...)
-}
-
-// ReplaceCorp replaces corp with corp name + refresh TTL
-func (md *MongoDao) ReplaceCorp(c *Corp) error {
-	filter := bson.M{
-		"name": c.Name,
-	}
-
-	opt := options.Replace().SetUpsert(true)
-
-	_, err := md.ReplaceOne(filter, c, corpCollName, opt)
-	return err
 }
 
 // ReplaceOne replaces one document from collection of db
