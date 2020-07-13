@@ -1,3 +1,3 @@
-# Making Billion with Stock
+# Gazua...!
 
 ## Backend server with GoLang
