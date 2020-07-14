@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	sessions "github.com/goincremental/negroni-sessions"
 	"github.com/goincremental/negroni-sessions/cookiestore"
@@ -56,6 +56,8 @@ func main() {
 	router.GET("/", renderMainView)
 	router.GET("/auth/:action/:provider", loginHandler)
 	router.GET("/logout", logoutHandler)
+	router.GET("/stocks/getCode", getStockCode)
+	router.POST("/stocks/:action", transactHandler)
 
 	n := negroni.Classic()
 
@@ -131,4 +133,49 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func logoutHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sessions.GetSession(r).Delete(currentUserKey)
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func getStockCode(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	corpname := r.FormValue("name")
+	if corp, ok := corpMap[corpname]; ok {
+		renderer.JSON(w, http.StatusOK, corp.Code)
+	} else {
+		renderer.JSON(w, http.StatusNotFound, nil)
+	}
+}
+
+func transactHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sessionUser := getSessionUser(r)
+	if sessionUser != nil {
+		user, err := userdb.FindUser(sessionUser.Email)
+		if err != nil {
+			log.Println(err)
+			goto RETURN
+		}
+
+		action := ps.ByName("action")
+		err = r.ParseForm()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		switch action {
+		case "buy":
+			stockName := r.Form.Get("bname")
+			stockCode := r.Form.Get("bcode")
+			quantity, _ := strconv.Atoi(r.Form.Get("bquantity"))
+			price, _ := strconv.Atoi(r.Form.Get("bprice"))
+			user.addTx(buy, stockCode, stockName, quantity, price)
+		case "sell":
+			stockName := r.Form.Get("sname")
+			stockCode := r.Form.Get("scode")
+			quantity, _ := strconv.Atoi(r.Form.Get("squantity"))
+			price, _ := strconv.Atoi(r.Form.Get("sprice"))
+			user.addTx(sell, stockCode, stockName, quantity, price)
+		}
+		userdb.UpdateUserStock(user)
+	}
+RETURN:
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }

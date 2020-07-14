@@ -7,12 +7,12 @@ import (
 
 // User structure for web-user
 type User struct {
-	UID       string           `json:"uid" bson:"_id,omitempty"`
-	Name      string           `json:"name" bson:"name,omitempty"`
-	Email     string           `json:"email" bson:"email,omitempty"`
-	AvatarURL string           `json:"avatar_url" bson:"avatar_url,omitempty"`
-	Stocks    map[string]Stock `json:"-" bson:"stocks,omitempty"`
-	Expires   time.Time        `json:"expires" bson:"-"`
+	UID       string            `json:"uid" bson:"_id,omitempty"`
+	Name      string            `json:"name" bson:"name,omitempty"`
+	Email     string            `json:"email" bson:"email,omitempty"`
+	AvatarURL string            `json:"avatar_url" bson:"avatar_url,omitempty"`
+	Stocks    map[string]*Stock `json:"-" bson:"stocks,omitempty"`
+	Expires   time.Time         `json:"expires" bson:"-"`
 }
 
 // Valid check user session validation
@@ -49,6 +49,31 @@ func (u *User) UpdateWithDB(newUser *User) {
 		if err := userdb.UpdateUser(u, keys...); err != nil {
 			log.Println("UpdateUser failed: " + err.Error())
 		}
+	}
+}
+
+func (u *User) addTx(txType tx, code, name string, quantity, price int) {
+	stock, ok := u.Stocks[code]
+	if !ok {
+		u.Stocks[code] = &Stock{
+			Name:  name,
+			Buyed: make([]Transaction, 0),
+			Sold:  make([]Transaction, 0),
+		}
+		stock = u.Stocks[code]
+	}
+	t := Transaction{
+		Price:    price,
+		Quantity: quantity,
+	}
+
+	switch txType {
+	case buy:
+		stock.Buyed = append(stock.Buyed, t)
+	case sell:
+		stock.Sold = append(stock.Sold, t)
+	default:
+		log.Println("Transaction not supported")
 	}
 }
 

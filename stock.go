@@ -1,5 +1,12 @@
 package main
 
+type tx int
+
+const (
+	buy tx = iota
+	sell
+)
+
 // Stock represents stock information
 // Stock code (KRX XXXXXX) would be key of the stocks map
 type Stock struct {

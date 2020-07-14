@@ -1,44 +1,116 @@
 {{define "editModal"}}
-<ul class="nav nav-tabs nav-fill" id="transacTab" role="tablist">
-    <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="buyTab" data-toggle="tab" href="#buy" role="tab" aria-controls="buy"
-            aria-selected="true">더 사자!!</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" id="sellTab" data-toggle="tab" href="#sell" role="tab" aria-controls="sell"
-            aria-selected="false">손절ㅠㅠ</a>
-    </li>
-</ul>
-<div class="tab-content" style="margin-top: 1rem;">
-    <div class="tab-pane active" id="buy" role="tabpanel" aria-labelledby="buyTab">
-        <form>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" id="code" placeholder="뭐 샀니" aria-label="code"
-                    aria-describedby="searchButton">
-                <div class="input-group-append">
-                    <button class="btn btn-primary btn-sm" type="button" id="searchButton">
-                        <i class="fas fa-search"></i>
-                    </button>
+<div class="modal-body">
+    <ul class="nav nav-tabs nav-fill" id="transacTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="buyTab" data-toggle="tab" href="#buy" role="tab" aria-controls="buy"
+                aria-selected="true">더 사자!!</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="sellTab" data-toggle="tab" href="#sell" role="tab" aria-controls="sell"
+                aria-selected="false">손절ㅠㅠ</a>
+        </li>
+    </ul>
+    <div class="tab-content" style="margin-top: 1rem;">
+        <div class="tab-pane active" id="buy" role="tabpanel" aria-labelledby="buyTab">
+            <form action="/stocks/buy" method="POST" id="buyForm">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="bname" name="bname" placeholder="뭐 샀니"
+                        aria-label="bname" aria-describedby="searchButton">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary btn-sm" type="button" id="searchButton">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <input type="hidden" id="bcode" name="bcode">
+                    <input type="number" class="form-control" id="bquantity" name="bquantity" placeholder="몇주 샀니"
+                        min="0" data-bind="value:replyNumber">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">₩</span>
+                    </div>
+                    <input type="number" class="form-control" id="bprice" name="bprice" placeholder="한 주에 얼마니">
                 </div>
-                <input type="text" class="form-control" id="quantity" placeholder="몇주 샀니">
-                <input type="text" class="form-control" id="price" placeholder="한 주에 얼마니">
-            </div>
-        </form>
-    </div>
-    <div class="tab-pane" id="sell" role="tabpanel" aria-labelledby="sellTab">
-        <form>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" id="scode" placeholder="뭐 팔았니">
-                <input type="text" class="form-control" id="squantity" placeholder="몇주 팔았니">
-                <input type="text" class="form-control" id="sprice" placeholder="한 주에 얼마니">
-            </div>
-        </form>
+            </form>
+        </div>
+        <div class="tab-pane" id="sell" role="tabpanel" aria-labelledby="sellTab">
+            <form action="/stocks/sell" method="POST" id="sellForm">
+                <div class="input-group mb-3">
+                    <select class="custom-select" id="sname" name="sname">
+                        <option value="none" selected>뭐 팔았니</option>
+                    </select>
+                    <input type="hidden" id="scode" name="scode">
+                    <input type="number" class="form-control" id="squantity" name="squantity" placeholder="몇주 팔았니">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">₩</span>
+                    </div>
+                    <input type="number" class="form-control" id="sprice" name="sprice" placeholder="한 주에 얼마니">
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="resetInputs()">취소ㅠㅠ</button>
+    <button type="button" class="btn btn-primary" id="submit">가즈아~!!</button>
+</div>
 <script>
-    $('#searchButton').click(function(){
-        $.getJSON("/stocks/code", { name: "카카오" }, function(data){
-            alert(data)
+    var inputTextName = $('#bname')
+    function resetInputs() {
+        $('input').val("").prop('readonly', false)
+        $('#sname').val("none").prop('selected', true)
+    }
+    var searchCodeF = function searchCode() {
+        var corpname = $('#bname').val()
+        if (corpname.length < 1) {
+            return
+        }
+        if (inputTextName.prop('readonly')) {
+            inputTextName.val("")
+            inputTextName.prop('readonly', false)
+            $('#searchButton').html('<i class="fas fa-search"></i>')
+        } else {
+            $.getJSON("/stocks/getCode", { name: corpname }, function (data) {
+                inputTextName.val(corpname + "(" + data + ")")
+                inputTextName.prop('readonly', true)
+                $('#searchButton').html('<i class="fas fa-times"></i>')
+            })
+        }
+    }
+    $('#searchButton').click(searchCodeF)
+    $('#bname').keydown(function (key) {
+        if (key.keyCode == 13) {
+            searchCodeF();
+        }
+    })
+    $('#submit').click(function () {
+        if (!inputTextName.prop('readonly')) {
+            alert("종목을 먼저 검색해주세요")
+            return
+        }
+        var activeTab = $('.tab-content .active').attr('id')
+        if (activeTab == "buy") {
+            var bname = $('#bname').val()
+            var bcode = bname.substring(bname.indexOf('(') + 1, bname.indexOf(')'))
+            bname = bname.substring(0, bname.indexOf('('))
+            $('#bname').val(bname)
+            $('#bcode').val(bcode)
+            $('#buyForm').submit()
+            resetInputs()
+        } else if (activeTab == "sell") {
+            var sname = $('#sname').val()
+            var scode = sname.substring(sname.indexOf('(') + 1, sname.indexOf(')'))
+            sname = sname.substring(0, sname.indexOf('('))
+            $('#bname').val(bname)
+            $('#scode').val(scode)
+            $('#sellForm').submit()
+            resetInputs()
+        }
+    })
+    $(function () {
+        var selectStock = $('#sname')
+        $('.name-and-code').each(function (index, item) {
+            var corpname = item.firstChild.textContent
+            var corpcode = item.lastChild.textContent
+            selectStock.append('<option value="' + corpcode + '">' + corpname + '(' + corpcode + ')' + '</option>');
         })
     })
 </script>
