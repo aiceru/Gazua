@@ -53,13 +53,7 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body">
-          {{template "editModal"}}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">취소ㅠㅠ</button>
-          <button type="button" class="btn btn-primary">가즈아~!!</button>
-        </div>
+        {{template "editModal"}}
       </div>
     </div>
   </div>
@@ -100,7 +94,7 @@
       <tbody>
         {{range $key, $value := .stockMap}}
           <tr><!-- style="vertical-align: middle;"> -->
-            <td>{{$value.Name}}<br>{{$key}}</td>
+            <td class="name-and-code">{{$value.Name}}<br>{{$key}}</td>
             <td>{{$value.CurrentPrice}}</td>
             <td>{{$value.Spent}}</td>
             <td>{{$value.Earned}}</td>
