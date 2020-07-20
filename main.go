@@ -68,16 +68,13 @@ func main() {
 }
 
 func renderMainView(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	session := sessions.GetSession(r)
-	var sessionUser User
-	if session.Get(currentUserKey) != nil {
+	currentUser := getSessionUser(r)
+	if currentUser != nil {
 		// render User info
-		data := session.Get(currentUserKey).([]byte)
-		json.Unmarshal(data, &sessionUser)
-		user, err := userdb.FindUser(sessionUser.Email)
+		user, err := userdb.FindUser(currentUser.Email)
 		if err != nil {
 			log.Println(err)
-			renderer.HTML(w, http.StatusOK, "index", sessionUser)
+			renderer.HTML(w, http.StatusOK, "index", currentUser)
 			return
 		}
 

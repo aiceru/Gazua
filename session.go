@@ -15,7 +15,7 @@ const (
 	sessionDuration = time.Hour
 )
 
-func getCurrentUser(r *http.Request) *User {
+func getSessionUser(r *http.Request) *User {
 	s := sessions.GetSession(r)
 
 	currentUserValue := s.Get(currentUserKey)
@@ -28,7 +28,7 @@ func getCurrentUser(r *http.Request) *User {
 	return &u
 }
 
-func setCurrentUser(r *http.Request, u *User) {
+func setSessionUser(r *http.Request, u *User) {
 	if u != nil {
 		u.Refresh()
 	}
@@ -51,9 +51,9 @@ func sessionHandler(ignore ...string) negroni.HandlerFunc {
 			}
 		}
 
-		u := getCurrentUser(r)
+		u := getSessionUser(r)
 		if u != nil && u.Valid() {
-			setCurrentUser(r, u)
+			setSessionUser(r, u)
 			next(w, r)
 			return
 		}
