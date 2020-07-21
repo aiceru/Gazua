@@ -53,6 +53,9 @@ func (u *User) UpdateWithDB(newUser *User) {
 }
 
 func (u *User) addTx(txType tx, code, name string, quantity, price int) {
+	if u.Stocks == nil {
+		u.Stocks = make(map[string]*Stock, 0)
+	}
 	stock, ok := u.Stocks[code]
 	if !ok {
 		u.Stocks[code] = &Stock{
