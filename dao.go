@@ -88,7 +88,7 @@ func (md *MongoDao) FindUser(email string) (*User, error) {
 	user := new(User)
 	f, err := md.Find(filter, userCollName)
 	if err == nil {
-		f.Decode(user)
+		err = f.Decode(user)
 	}
 	return user, err
 }
@@ -103,7 +103,9 @@ func (md *MongoDao) Find(filter bson.M, collname string) (*mongo.SingleResult, e
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return collection.FindOne(ctx, filter), nil
+	//return collection.FindOne(ctx, filter), nil
+	ret := collection.FindOne(ctx, filter)
+	return ret, nil
 }
 
 // UpdateUser updates user info
