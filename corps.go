@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
+	"github.com/julienschmidt/httprouter"
 	"golang.org/x/net/html"
 	"golang.org/x/text/encoding/korean"
 	"golang.org/x/text/transform"
@@ -152,4 +155,47 @@ func loadCorpMap() error {
 	err = json.Unmarshal(byteValue, &corpMap)
 
 	return err
+}
+
+func searchFromKTB(name string) string {
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.PostForm("https://www.ktb.co.kr/trading/popup/itemPop.jspx", url.Values{"searchText": {name}})
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Printf("status code error: %d %s", resp.StatusCode, resp.Status)
+		return ""
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+
+	s := doc.Find("#chkFrm").Find("option")
+	code, _ := s.Attr("value")
+	return code
+}
+
+func getStockCode(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	corpname := r.FormValue("name")
+	if corp, ok := corpMap[corpname]; ok {
+		renderer.JSON(w, http.StatusOK, corp.Code)
+	} else {
+		code := searchFromKTB(corpname)
+		if code != "" {
+			c := new(Corp)
+			c.Name = corpname
+			c.Code = code
+			c.UpdatedAt = time.Now()
+			corpMap[corpname] = c
+			renderer.JSON(w, http.StatusOK, c.Code)
+		}
+		renderer.JSON(w, http.StatusNotFound, nil)
+	}
 }

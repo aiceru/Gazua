@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 
 	sessions "github.com/goincremental/negroni-sessions"
 	"github.com/goincremental/negroni-sessions/cookiestore"
@@ -69,6 +70,11 @@ func main() {
 	n.Run(":9000")
 }
 
+type statusReturn struct {
+	code   string
+	status *StockStatus
+}
+
 func renderMainView(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	currentUser := getSessionUser(r)
 	if currentUser != nil {
@@ -80,16 +86,38 @@ func renderMainView(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 			return
 		}
 
+		statusChan := make(chan statusReturn)
+		defer close(statusChan)
+		doneChan := make(chan struct{})
 		stockMap := make(StockStatusMap, 0)
 		sum := StockStatus{}
+
+		var wg sync.WaitGroup
 		for code, stock := range user.Stocks {
-			income := stock.CalculateIncome(code)
-			sum.Spent += income.Spent
-			sum.Earned += income.Earned
-			sum.Remain += income.Remain
-			sum.Income += income.Income
-			stockMap[code] = income
+			wg.Add(1)
+			go stock.CalculateIncome(&wg, statusChan, code)
 		}
+
+		go func(wg *sync.WaitGroup, doneChan chan<- struct{}) {
+			wg.Wait()
+			close(doneChan)
+		}(&wg, doneChan)
+
+	WAITLOOP:
+		for {
+			select {
+			case ret := <-statusChan:
+				status := ret.status
+				stockMap[ret.code] = status
+				sum.Spent += status.Spent
+				sum.Earned += status.Earned
+				sum.Remain += status.Remain
+				sum.Income += status.Income
+			case <-doneChan:
+				break WAITLOOP
+			}
+		}
+
 		sum.Yield = float32((sum.Income)) / float32(sum.Spent) * 100
 
 		renderer.HTML(w, http.StatusOK, "index", map[string]interface{}{
@@ -133,15 +161,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func logoutHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sessions.GetSession(r).Delete(currentUserKey)
 	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func getStockCode(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	corpname := r.FormValue("name")
-	if corp, ok := corpMap[corpname]; ok {
-		renderer.JSON(w, http.StatusOK, corp.Code)
-	} else {
-		renderer.JSON(w, http.StatusNotFound, nil)
-	}
 }
 
 func transactHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
